@@ -19,7 +19,10 @@ class MonitorStatus:
                 response_body = response.json()
                 status = response_body["runtimeStatus"]
                 if status in ("Completed", "Failed"):
-                    results = response_body.get("output", [])
+                    status_var.set(f"Status: {status}")
+                    results = response_body.get("output", [""])
+                    results_label = Label(window, text="Task results:")
+                    results_label.grid(row=5, column=0)
                     results_output_label = Label(window, text="\n".join(results))
                     results_output_label.grid(row=6, column=1)
                     return
@@ -31,6 +34,7 @@ class MonitorStatus:
 def on_trigger():
     response = requests.post(url_entry.get(), get_body_from_inputs())
     if response.status_code == 202:
+        status_var.set("Status: Running")
         response_body = response.json()
         status_query_uri = response_body["statusQueryGetUri"]
         monitor = MonitorStatus(status_query_uri=status_query_uri)
@@ -59,14 +63,14 @@ last_date_label.grid(row=2, column=0)
 last_date_entry = Entry(window)
 last_date_entry.grid(row=2, column=1)
 
-trigger_btn = Button(window, text="Trigger")
+trigger_btn = Button(window, text="Trigger", command=on_trigger)
 trigger_btn.grid(row=3, column=0)
 
-status_label = Label(window, text="Status:")
-status_label.grid(row=4, column=0)
+status_var = StringVar()
+status_var.set("Status: Not triggered")
 
-results_label = Label(window, text="Task results:")
-results_label.grid(row=5, column=0)
+status_label = Label(window, textvariable=status_var)
+status_label.grid(row=4, column=0)
 
 
 window.mainloop()
